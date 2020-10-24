@@ -1,0 +1,196 @@
+version: "3.3"
+
+services:
+    applications:
+        image: eu.gcr.io/kite-221910/kafka-experiments-applications:latest
+        ports: ["9093:9093", "9198:9198"]
+        environment:
+            SERVICE_PORT: "9093"
+            SERVICE_MANAGEMENT_PORT: "9198"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            KAFKA_ZK_NODES: "zookeeper:2181"
+            KAFKA_SCHEMA_REGISTRY: "http://schema-registry:9090"
+            EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
+            ZIPKIN_URL: "http://zipkin:9252"
+            ADMIN_URL: "http://admin:8080/admin"
+            KITE_EXPERIMENTS_CONFIG_SERVER: "http://config:8888"
+            POSTGRES_SERVER: "postgres:5432"
+            POSTGRES_USER: "postgres"
+            POSTGRES_PASSWORD: "hahaha123"
+            POSTGRES_MAX_POOL_SIZE: "10"
+            POSTGRES_CONNECTION_LIFETIME: "20000"
+            EVENTS_TOPIC_NAME: "events-streaming"
+            KAFKA_STATE_DIR: /tmp/kafka-state/applications
+            KAFKA_LOGGING_TOPIC: "logging-stream"
+            SNAPSHOT_TOPIC_NAME: "events-projecting-applications"
+            STATE_STORE_NAME: "applications-awesome-store"
+            MONGO_SERVER: "35.241.112.232:9098"
+            MONGO_USER: "root"
+            MONGO_PASSWORD: "root"
+            MONGO_AUTH_DB: "admin"
+        healthcheck:
+          test: "curl --silent --fail localhost:9198/health || exit 1"
+          interval: 30s
+          timeout: 10s
+          retries: 10
+        depends_on: [discovery, config]
+        deploy:
+            mode: replicated
+            replicas: 3
+            placement:
+                constraints: [node.labels.type == regular] 
+        networks: [kite, db, mongo, kafka, elastic]
+    documents:
+        image: eu.gcr.io/kite-221910/kafka-experiments-documents:latest
+        ports: ["9094:9094", "9199:9199"]
+        environment:
+            SERVICE_PORT: "9094"
+            SERVICE_MANAGEMENT_PORT: "9199"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            KAFKA_ZK_NODES: "zookeeper:2181"
+            KAFKA_SCHEMA_REGISTRY: "http://schema-registry:9090"
+            EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
+            ZIPKIN_URL: "http://zipkin:9252"
+            ADMIN_URL: "http://admin:8080/admin"
+            KITE_EXPERIMENTS_CONFIG_SERVER: "http://config:8888"
+            EVENTS_TOPIC_NAME: "events-streaming"
+            SNAPSHOT_TOPIC_NAME: "events-projecting-documents"
+            STATE_STORE_NAME: "documents-awesome-store"
+            KAFKA_STATE_DIR: /tmp/kafka-state/documents
+            KAFKA_LOGGING_TOPIC: "logging-stream"
+            MONGO_SERVER: "35.241.112.232:9098"
+            MONGO_USER: "root"
+            MONGO_PASSWORD: "root"
+            MONGO_DB: "documents-new"
+            MONGO_AUTH_DB: "admin"
+        healthcheck:
+          test: "curl --silent --fail localhost:9199/health || exit 1"
+          interval: 30s
+          timeout: 10s
+          retries: 10
+        depends_on: [discovery, config]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: 
+                - node.labels.type == regular
+        networks: [kite, mongo, kafka, elastic]
+    regulations:
+        image: eu.gcr.io/kite-221910/kafka-experiments-regulations:latest
+        ports: ["9095:9095", "9196:9196"]
+        environment:
+            SERVICE_PORT: "9095"
+            SERVICE_MANAGEMENT_PORT: "9196"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            KAFKA_ZK_NODES: "zookeeper:2181"
+            KAFKA_SCHEMA_REGISTRY: "http://schema-registry:9090"
+            EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
+            ZIPKIN_URL: "http://zipkin:9252"
+            ADMIN_URL: "http://admin:8080/admin"
+            KITE_EXPERIMENTS_CONFIG_SERVER: "http://config:8888"
+            EVENTS_TOPIC_NAME: "events-streaming"
+            SNAPSHOT_TOPIC_NAME: "events-projecting-regulations"
+            STATE_STORE_NAME: "regulations-awesome-store"
+            KAFKA_STATE_DIR: /tmp/kafka-state/regulations
+            KAFKA_LOGGING_TOPIC: "logging-stream"
+            MONGO_SERVER: "35.241.112.232:9098"
+            MONGO_USER: "root"
+            MONGO_PASSWORD: "root"
+            MONGO_DB: "documents-new"
+            MONGO_AUTH_DB: "admin"
+        healthcheck:
+          test: "curl --silent --fail localhost:9196/health || exit 1"
+          interval: 30s
+          timeout: 10s
+          retries: 10
+        depends_on: [discovery, config]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: 
+                - node.labels.type == regular
+        networks: [kite, mongo, kafka, elastic]
+    discovery:
+        image: eu.gcr.io/kite-221910/kafka-experiments-discovery:latest
+        ports: ["8761:8761"]
+        environment:
+            BOOT_ADMIN_CLIENT_URL: "http://admin:8080"
+            DISCOVERY_SERVICE_PORT: "8761"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            KAFKA_LOGGING_TOPIC: "logging-stream"
+            KITE_EXPERIMENTS_CONFIG_SERVER: "http://config:8888"
+        healthcheck:
+          test: "curl --silent --fail localhost:8761/actuator/health || exit 1"
+          interval: 30s
+          timeout: 10s
+          retries: 5
+        depends_on: [config]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.type == regular] 
+        networks: [kite, kafka]
+    gateway:
+        image: eu.gcr.io/kite-221910/kafka-experiments-gateway:latest
+        ports: ["8762:8762"]
+        environment:
+            GATEWAY_SERVICE_PORT: "8762"
+            EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            KAFKA_LOGGING_TOPIC: "logging-stream"
+            ADMIN_URL: "http://admin:8080/admin"
+            KITE_EXPERIMENTS_CONFIG_SERVER: "http://config:8888"
+        healthcheck:
+          test: "curl --silent --fail localhost:8762/health || exit 1"
+          interval: 30s
+          timeout: 10s
+          retries: 5
+        depends_on: [discovery, config]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.type == regular] 
+        networks: [kite, kafka]
+    admin:
+        image: eu.gcr.io/kite-221910/kafka-experiments-admin:latest
+        ports: ["8080:8080"]
+        environment:
+            EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
+            KITE_EXPERIMENTS_CONFIG_SERVER: "http://config:8888"
+        depends_on: [discovery, config]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.type == regular] 
+        networks: [kite]
+    config:
+        image: eu.gcr.io/kite-221910/kite-experiments-config:latest
+        ports: ["8888:8888", "9193:9193"]
+        environment:
+#            CONFIG_REPOSITORY_URL: "https://github.com/smitienko96/kite-config-repo.git"
+            CONFIG_REPOSITORY_URL: "https://github.com/quantizator/KiteConfig.git"
+            EUREKA_DEFAULT_ZONE_URL: "http://discovery:8761/eureka"
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            KAFKA_LOGGING_TOPIC: "logging-stream"
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.type == regular]
+        networks: [kite, kafka]
+networks:
+    db:
+        external: true
+    mongo:
+        external: true
+    elastic:
+        external: true
+    kafka:
+        external: true
+    kite:
+        driver: overlay

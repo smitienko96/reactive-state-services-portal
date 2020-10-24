@@ -1,0 +1,284 @@
+buildscript {
+    ext {
+        springBootVersion = '2.1.0.RELEASE'
+    }
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "io.spring.gradle:dependency-management-plugin:0.5.2.RELEASE"
+        classpath "com.commercehub.gradle.plugin:gradle-avro-plugin:0.15.1"
+        classpath "org.postgresql:postgresql:42.2.5"
+        classpath "org.jooq:jooq-codegen:3.11.5"
+        classpath "gradle.plugin.org.liquibase:liquibase-gradle-plugin:2.0.1"
+        classpath "org.yaml:snakeyaml:1.23"
+    }
+}
+
+plugins {
+    id "com.bmuschko.docker-spring-boot-application" version "4.0.5"
+    id 'io.franzbecker.gradle-lombok' version '1.14'
+}
+
+String getConfigurationProperty(String envVar, String sysProp) {
+    System.getenv(envVar) ?: project.findProperty(sysProp)
+}
+
+configurations {
+    implementation{
+        exclude module: "spring-boot-starter-tomcat"
+        exclude module: "spring-boot-starter-logging"
+        exclude module: "mongo-java-driver"
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        force 'org.apache.kafka:kafka-streams:2.0.1'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'java-library'
+
+apply plugin: 'io.franzbecker.gradle-lombok'
+lombok {
+    version = '1.18.2'
+    sha256 = ""
+}
+
+apply plugin: "com.commercehub.gradle.plugin.avro"
+
+apply plugin: 'idea'
+
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'maven-publish'
+
+group = 'ru.lenobl.egov.kite'
+version = '1.0'
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven { url "https://repo.spring.io/milestone" }
+    maven { url "https://repo.spring.io/libs-milestone" }
+    maven { url "http://packages.confluent.io/maven" }
+    maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+}
+
+
+ext {
+    springCloudVersion = 'Greenwich.M1'
+    springCloudStreamVersion = 'Fishtown.RC2'
+}
+
+apply plugin: "org.liquibase.gradle"
+
+apply plugin: "com.bmuschko.docker-spring-boot-application"
+
+def docker_registry_url = DOCKER_REGISTRY_URL
+docker {
+    registryCredentials {
+//        url = 'https://gcr.io'
+        url = "https://${docker_registry_url}"
+//        username = '_json_key'
+//        password = file(GCE_KEY_LOCATION).text
+        username = DOCKER_USERNAME
+        password = DOCKER_PASSWORD
+    }
+}
+
+dependencies {
+    implementation('ru.lenobl.egov.kite:KiteExperimentsCommon:1.0')
+//    implementation("de.codecentric:spring-boot-admin-starter-client:${springAdminVersion}")
+    
+    implementation('org.springframework.boot:spring-boot-starter-aop')
+    implementation('org.springframework.boot:spring-boot-starter-security')
+
+    implementation('org.apache.kafka:kafka-streams:2.0.1') {
+        force = true
+    }
+    implementation('org.springframework.cloud:spring-cloud-stream')
+    implementation('org.springframework.cloud:spring-cloud-starter-config')
+    implementation("org.springframework.cloud:spring-cloud-starter-stream-kafka")
+    implementation('org.springframework.cloud:spring-cloud-stream-binder-kafka-streams')
+    implementation('org.springframework.cloud:spring-cloud-starter-sleuth')
+    implementation('org.springframework.cloud:spring-cloud-starter-zipkin')
+    implementation('org.springframework.cloud:spring-cloud-starter-netflix-hystrix')
+    implementation("org.springframework.boot:spring-boot-starter-log4j2")
+
+    implementation("org.springframework.boot:spring-boot-starter-reactor-netty")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("joda-time:joda-time")
+    implementation("io.projectreactor:reactor-core")
+    implementation("io.projectreactor.kafka:reactor-kafka")
+    implementation("io.confluent:monitoring-interceptors:3.3.0")
+    implementation("org.apache.kafka:kafka-log4j-appender:1.0.0")
+    implementation("org.apache.avro:avro:1.8.2")
+//    implementation("io.confluent:kafka-schema-registry-client:4.0.0")
+//    implementation("io.confluent:kafka-streams-avro-serde:4.0.0")
+//    implementation("org.apache.kafka:kafka-tools:2.0.0")
+    implementation("org.apache.commons:commons-lang3:3.7")
+    implementation("org.apache.commons:commons-collections4:4.0")
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.postgresql:postgresql:42.2.5")
+    implementation('javax.validation:validation-api:2.0.1.Final')
+    implementation("org.mongodb:mongodb-driver-core:3.9.0")
+    implementation("org.mongodb:mongodb-driver-async:3.9.0")
+    implementation("org.mongodb:bson:3.9.0")
+    implementation("org.mongodb:mongodb-driver-reactivestreams:1.10.0")
+    implementation("org.jooq:jooq:3.11.5")
+    implementation("org.jooq:jooq-codegen:3.11.5")
+    implementation("com.zaxxer:HikariCP:3.2.0")
+    implementation("org.springframework.kafka:spring-kafka")
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
+    testImplementation('org.springframework.cloud:spring-cloud-stream-test-support')
+
+    liquibaseRuntime "org.liquibase:liquibase-core:3.6.1"
+    liquibaseRuntime "org.liquibase:liquibase-groovy-dsl:2.0.1"
+    liquibaseRuntime "org.postgresql:postgresql:42.2.5"
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-stream-dependencies:${springCloudStreamVersion}"
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+
+def postgres_host = DB_POSTGRES_HOST
+def postgres_username = DB_POSTGRES_USERNAME
+def postgres_password = DB_POSTGRES_PASSWORD
+def postgres_db = DB_POSTGRES_DATABASE
+def postgres_connection_string = "jdbc:postgresql://${postgres_host}/${postgres_db}"
+
+
+liquibase {
+    activities {
+        main {
+            changeLogFile 'src/main/db/changelog_applications.groovy'
+//            url project.ext.mainUrl
+//            username project.ext.mainUsername
+//            password project.ext.mainPassword
+            url postgres_connection_string
+            username postgres_username
+            password postgres_password
+        }
+        diffMain {
+            changeLogFile 'src/main/db/changelog_applications.groovy'
+//            url project.ext.mainUrl
+//            username project.ext.mainUsername
+//            password project.ext.mainPassword
+            url postgres_connection_string
+            username postgres_username
+            password postgres_password
+            difftypes 'data'
+        }
+    }
+//    runList = project.ext.runList
+    runList = 'main'
+}
+
+task generateJooqPojos {
+    group 'build'
+    description 'Generate Jooq DB structure with POJOS/DAOS'
+
+    doLast {
+        println 'Generating JOOQ DB structure'
+
+        def writer = new StringWriter()
+        def xml = new groovy.xml.MarkupBuilder(writer)
+                .configuration('xmlns': 'http://www.jooq.org/xsd/jooq-codegen-3.11.0.xsd') {
+            jdbc() {
+                driver('org.postgresql.Driver')
+                url(postgres_connection_string)
+                user(postgres_username)
+                password(postgres_password)
+            }
+            generator() {
+                database() {
+                    inputSchema('applications')
+                }
+
+                // Watch out for this caveat when using MarkupBuilder with "reserved names"
+                // - https://github.com/jOOQ/jOOQ/issues/4797
+                // - http://stackoverflow.com/a/11389034/521799
+                // - https://groups.google.com/forum/#!topic/jooq-user/wi4S9rRxk4A
+                generate([:]) {
+                    pojos true
+                }
+                target() {
+                    packageName('test.requests.persistence.db')
+                    directory('src/main/java')
+                }
+            }
+        }
+
+        org.jooq.codegen.GenerationTool.generate(writer.toString())
+    }
+
+}
+
+
+build.dependsOn publishToMavenLocal
+
+
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+
+def docker_application_name = "kafka-experiments-applications"
+def docker_healthcheck_port = "\${APPLICATIONS_SERVICE_MANAGEMENT_PORT}"
+
+task createDockerfile(type: Dockerfile) {
+    group 'build'
+    destFile = project.file('build/docker/Dockerfile')
+    from 'anapsix/alpine-java'
+    label(['maintainer': 'Dmitry Steklyannikov "quanizator@gmail.com"'])
+    copyFile jar.archiveName, "/app/${docker_application_name}.jar"
+    workingDir "/app"
+    runCommand 'apk --update --no-cache add curl'
+    entryPoint 'java'
+    defaultCommand '-jar', "/app/${docker_application_name}.jar", '-Xms512m -Xmx3g'
+}
+
+task buildImage(type: DockerBuildImage) {
+    group 'build'
+    dependsOn createDockerfile
+    inputDir = createDockerfile.destFile.asFile.orNull.parentFile
+    tags = ["${docker_registry_url}/${docker_application_name}:latest"]
+}
+
+task pushImage(type: DockerPushImage) {
+    group 'build'
+    dependsOn buildImage
+    imageName = buildImage.tags.get()[0]
+}
+
+
+task syncJarAppArchive(type: Sync) {
+    dependsOn assemble
+    from jar.archivePath
+    into createDockerfile.destFile.asFile.orNull.parentFile
+}
+
+createDockerfile.dependsOn syncJarAppArchive

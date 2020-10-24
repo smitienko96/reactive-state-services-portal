@@ -1,0 +1,21 @@
+{ "type": "record",
+    "namespace": "test.documents.domain.events.avro",
+    "doc": "Событие регистрации в системе нового поля для существующего типа документа",
+    "name": "DocumentFieldRegistered",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "documentTypeId", "type": "string"},
+        {"name": "version", "type": "int"},
+        {"name": "fieldCode", "type": "string"},
+        {"name": "classifierCode", "type": ["string", "null"]},
+        {"name": "fieldType", "type": "string"},
+        {"name": "required", "type": "boolean"},
+        {"name": "name", "type": "string"},
+        {"name": "description", "type": ["string", "null"]},
+        {"name": "options", "type":
+            ["null", {"type": "array", "items": "string"}],
+            "default":null
+        }
+    ]
+}

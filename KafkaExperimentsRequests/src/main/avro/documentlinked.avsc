@@ -1,0 +1,28 @@
+{ "type": "record",
+    "namespace": "test.requests.domain.events.avro",
+    "doc": "Событие прикрепления к заявлению документа",
+    "name": "DocumentLinked",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "applicationNumber", "type": "string"},
+        {"name": "version", "type": "int"},
+        {"name": "documentId", "type": "string"},
+        {"name": "name", "type": "string"},
+        {"name": "description", "type": "string"},
+        {"name": "designation", "type": "string"},
+        {"name": "documentTypeId", "type": "string"},
+        {"name": "documentTypeCode", "type": "string"},
+        {"name": "documentFields", "type": ["null", {
+            "type": "array", "items": {
+                "type": "record",
+                "name": "DocumentField",
+                "fields": [
+                        {"name": "fieldCode", "type": "string"},
+                        {"name": "value", "type": "string"}
+                        ]
+                 }
+            }],"default":null
+        }
+    ]
+}

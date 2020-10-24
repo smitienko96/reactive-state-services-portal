@@ -1,0 +1,30 @@
+spring.application.name: kafka-experiments-regulations
+spring.profiles.include: kafka,mongo
+
+spring.sleuth.sampler.probability: 1.0
+spring.zipkin:
+  base-url: ${ZIPKIN_URL}
+  sender.type: kafka
+  locator.discovery.enabled: true
+spring.kafka.producer.bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+server.port: ${SERVICE_PORT}
+
+spring.cloud.config.discovery:
+  enabled: true
+  serviceId: kite-experiments-config
+
+eureka:
+  client:
+    registryFetchIntervalSeconds: 10
+    serviceUrl.defaultZone: ${EUREKA_DEFAULT_ZONE_URL}
+    healthcheck.enabled: true
+  instance:
+    leaseRenewalIntervalInSeconds: 10
+    health-check-url-path: /health
+    preferIpAddress: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    metadata-map:
+      management:
+        port: ${management.server.port}
+        instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+        context-path: /

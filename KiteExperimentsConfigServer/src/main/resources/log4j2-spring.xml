@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info" name="spring-boot-kafka-log" monitorInterval="30">
+    <Appenders>
+        <Kafka name="Kafka" topic="${env:KAFKA_LOGGING_TOPIC}">
+            <JsonLayout/>
+            <Property name="bootstrap.servers">${env:KAFKA_BOOTSTRAP_SERVERS}</Property>
+        </Kafka>
+        <Async name="Async">
+            <AppenderRef ref="Kafka"/>
+        </Async>
+
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout pattern="%highlight{%d{HH:mm:ss.SSS} %-5p [%-7t] %F.%M:%L - %m%n%throwable}"/>
+        </Console>
+
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="Kafka"/>
+            <AppenderRef ref="stdout"/>
+        </Root>
+    </Loggers>
+</Configuration>

@@ -1,0 +1,12 @@
+{ "type": "record",
+    "namespace": "test.requests.domain.events.avro",
+    "doc": "Событие изменения статуса заявления",
+    "name": "ApplicationStatusChanged",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "applicationNumber", "type": "string"},
+        {"name": "version", "type": "int"},
+        {"name": "newStatus", "type": "string"}
+    ]
+}

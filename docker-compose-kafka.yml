@@ -1,0 +1,197 @@
+version: "3.3"
+services:
+    zookeeper:
+        image: wurstmeister/zookeeper
+        ports: ["2181:2181"]
+        environment:
+            ZOOKEEPER_CLIENT_PORT: "2181"
+            ZOOKEEPER_TICK_TIME: "50000"
+            ZOOKEEPER_SYNC_LIMIT: "20" 
+        networks: [kafka]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.type == kafka] 
+            restart_policy: 
+                condition: on-failure
+                delay: 10s 
+                max_attempts: 10
+                window: 120s
+    broker:
+        image: 192.168.100.212:443/kafka-broker
+        ports:
+           - target: 9092
+             published: 9092
+             protocol: tcp
+             mode: host
+        environment:
+            KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+            HOSTNAME_COMMAND: "curl -H 'Metadata-Flavor:Google' http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip"
+            KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://:9099,OUTSIDE://_{HOSTNAME_COMMAND}:9092"
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+            KAFKA_DEFAULT_REPLICATION_FACTOR: "2"
+            KAFKA_LISTENERS: "PLAINTEXT://:9099,OUTSIDE://:9092"
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,OUTSIDE:PLAINTEXT
+            KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "_{HOSTNAME_COMMAND}:9092"
+            KAFKA_CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: "2"
+            KAFKA_CONFLUENT_METRICS_REPORTER_VOLUME_METRICS_REFRESH_MS: "3000"
+        volumes:
+            - /srv/kafkadata/broker:/kafka
+        depends_on:
+            - zookeeper
+        networks: [kafka]
+        deploy:
+            mode: replicated
+            replicas: 2
+            placement:
+                constraints: [node.labels.type == kafka] 
+            restart_policy: 
+                condition: on-failure
+                delay: 10s 
+                max_attempts: 10
+                window: 120s 
+    schema-registry:
+        image: confluentinc/cp-schema-registry
+        ports: ["9090:9090"]
+        environment:
+            SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: "zookeeper:2181"
+            SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:9090"
+            SCHEMA_REGISTRY_HOST_NAME: "schema-registry"
+        depends_on:
+            - zookeeper
+        networks: [kafka]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.type == kafka] 
+            restart_policy: 
+                condition: on-failure
+                delay: 10s 
+                max_attempts: 10
+                window: 120s 
+    schema-registry-ui:
+        image: landoop/schema-registry-ui
+        hostname: kafka-schema-registry-ui
+        ports: ["9022:8000"]
+        environment:
+          SCHEMAREGISTRY_URL: http://schema-registry:9090/
+          PROXY: "true"
+        depends_on:
+          - schema-registry
+        networks: [kafka]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.type == kafka] 
+            restart_policy: 
+                condition: on-failure
+                delay: 10s 
+                max_attempts: 10
+                window: 120s 
+    kafka-topics-ui:
+        image: landoop/kafka-topics-ui
+        hostname: kafka-topics-ui
+        ports:
+          - "9023:8000"
+        environment:
+          KAFKA_REST_PROXY_URL: "http://kafka-rest:9091/"
+          PROXY: "true"
+        depends_on:
+          - zookeeper
+          - broker
+          - schema-registry
+          - kafka-rest
+        networks: [kafka]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.type == kafka] 
+            restart_policy: 
+                condition: on-failure
+                delay: 10s 
+                max_attempts: 10
+                window: 120s 
+
+    kafka-rest:
+        image: confluentinc/cp-kafka-rest
+        ports: ["9091:9091"]
+        environment:
+            KAFKA_REST_ZOOKEEPER_CONNECT: "zookeeper:2181"
+            KAFKA_REST_LISTENERS: "http://0.0.0.0:9091"
+            KAFKA_REST_HOST_NAME: "kafka-rest"
+            KAFKA_REST_SCHEMA_REGISTRY_URL: "http://schema-registry:9090"
+        depends_on:
+            - zookeeper
+            - schema-registry
+        networks: [kafka]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.type == kafka] 
+            restart_policy: 
+                condition: on-failure
+                delay: 10s 
+                max_attempts: 10
+                window: 120s 
+    kafka-control-center:
+        image: confluentinc/cp-enterprise-control-center
+        ports: ["9021:9021"]
+        environment:
+            CONTROL_CENTER_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            CONTROL_CENTER_ZOOKEEPER_CONNECT: "zookeeper:2181"
+            CONTROL_CENTER_KSQL_ENDPOINT: "http://kafka-ksql:9024"
+            CONTROL_CENTER_KSQL_URL: "http://kafka-ksql:9024"
+            CONTROL_CENTER_REPLICATION_FACTOR: 1
+        volumes:
+            - /srv/kafkadata/controlcenter:/var/lib/confluent-control-center
+        depends_on:
+            - zookeeper
+            - broker
+            - kafka-ksql
+        ulimits:
+            nofile:
+                soft: 16384
+                hard: 16384
+        networks: [kafka]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.type == kafka] 
+            restart_policy: 
+                condition: on-failure
+                delay: 10s 
+                max_attempts: 10
+                window: 360s 
+    kafka-ksql:
+        image: confluentinc/cp-ksql-server
+        ports: ["9024:9024"]
+        environment:
+            KSQL_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            KSQL_KSQL_SERVICE_ID: "confluent_kite_ksql"
+            KSQL_LISTENERS: http://0.0.0.0:9024
+            KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:9090"
+        depends_on:
+            - zookeeper
+            - broker
+            - schema-registry
+        networks: [kafka]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.type == kafka] 
+            restart_policy: 
+                condition: on-failure
+                delay: 10s 
+                max_attempts: 10
+                window: 360s 
+networks:
+    kafka:
+        external: true

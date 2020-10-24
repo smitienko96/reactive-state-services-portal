@@ -1,0 +1,62 @@
+version: "3.3"
+services:
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:6.5.0
+        environment:
+            - cluster.name=docker-cluster
+            - discovery.type=single-node
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        ports: ["9200:9200"]
+        deploy:
+            mode: replicated
+            replicas: 1
+        networks: [elastic]
+    logstash:
+        image: 192.168.100.212:443/logstash:snapshot
+        ports: ["9251:9600"]
+        environment:
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+            EVENTS_TOPIC: "events-streaming"
+            LOGGING_TOPIC: "logging-stream"
+            ELASTICSEARCH_URL: "http://elasticsearch:9200"
+        depends_on: 
+            - elasticsearch
+        deploy:
+            mode: replicated
+            replicas: 1
+        networks: [elastic, kafka]
+    kibana:
+        image: docker.elastic.co/kibana/kibana:6.5.0
+        ports: ["9250:5601"]
+        environment:
+            ELASTICSEARCH_URL: "http://elasticsearch:9200"
+        depends_on:
+            - elasticsearch
+        deploy:
+            mode: replicated
+            replicas: 1
+        networks: [elastic]
+    zipkin:
+        image: openzipkin/zipkin
+        ports: ["9252:9411"]
+        environment:
+            STORAGE_TYPE: elasticsearch
+            ES_HOSTS: http://elasticsearch:9200
+            KAFKA_BOOTSTRAP_SERVERS: "35.228.97.151:9092,35.228.179.246:9092"
+        depends_on:
+            - elasticsearch
+        networks: [elastic, kafka]
+
+volumes:
+    esdata:
+        driver: local
+networks:
+    elastic:
+        external: true
+    kafka:
+        external: true

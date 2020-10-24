@@ -1,0 +1,13 @@
+{ "type": "record",
+    "namespace": "test.regulations.domain.events.avro",
+    "doc": "Событие регистрации ",
+    "name": "RegulationQuestionaryRegistered",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "regulationNumber", "type": "string"},
+        {"name": "regulationDate", "type": "long"},
+        {"name": "version", "type": "int"},
+        {"name": "documentTypeId", "type": "string"}
+    ]
+}

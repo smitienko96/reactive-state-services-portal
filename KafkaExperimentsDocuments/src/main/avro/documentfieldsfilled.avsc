@@ -1,0 +1,22 @@
+{ "type": "record",
+    "namespace": "test.documents.domain.events.avro",
+    "doc": "Событие заполнения полей документа",
+    "name": "DocumentFieldsFilled",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "documentId", "type": "string"},
+        {"name": "version", "type": "int"},
+        {"name": "documentFields", "type": {
+            "type": "array", "items": {
+                "type": "record",
+                "name": "DocumentField",
+                "fields": [
+                        {"name": "fieldCode", "type": "string"},
+                        {"name": "value", "type": "string"}
+                        ]
+                 }
+            }
+        }
+    ]
+}

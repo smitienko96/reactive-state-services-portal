@@ -1,0 +1,44 @@
+version: '3.3'
+services:
+  mongo:
+    image: mongo
+    ports: ["9098:27017"]
+    # command: [ "mongod", "--bind_ip_all"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    volumes: 
+        - /mnt/mongostore:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongo --quiet --eval 'db.stats().ok'"]
+      interval: 30s
+      timeout: 40s
+      retries: 5
+    deploy:
+        mode: replicated
+        replicas: 1
+        restart_policy: 
+            condition: on-failure
+        placement:
+            constraints: [node.labels.db == mongo]
+    networks: [mongo, kafka]
+  mongo-express:
+    image: mongo-express
+    ports: ["9099:8081"]
+    environment:
+        ME_CONFIG_MONGODB_ADMINUSERNAME: root
+        ME_CONFIG_MONGODB_ADMINPASSWORD: root
+    deploy:
+        mode: replicated
+        replicas: 1
+        restart_policy: 
+            condition: on-failure
+    depends_on:
+        - mongo
+    networks: [mongo]
+
+networks:
+    kafka:
+        external: true
+    mongo:
+        external: true

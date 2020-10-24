@@ -1,0 +1,19 @@
+{ "type": "record",
+    "namespace": "test.requests.domain.events.avro",
+    "doc": "Событие указания или изменения паспортных данных заявителя - физического лица",
+    "name": "PassportDataSpecified",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "snils", "type": "string"},
+        {"name": "version", "type": "int"},
+        {"name": "series", "type": "string"},
+        {"name": "number", "type": "string"},
+        {"name": "issueDate", "type": {
+                             "type": "int",
+                             "logicalType": "date"
+                         }
+        },
+        {"name": "issuingAuthority", "type": "string"}
+    ]
+}

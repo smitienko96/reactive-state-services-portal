@@ -1,0 +1,12 @@
+{ "type": "record",
+    "namespace": "test.requests.domain.events.avro",
+    "doc": "Сдача заявления в архив",
+    "name": "ApplicationArchived",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "applicationNumber", "type": "string"},
+        {"name": "version", "type": "int"},
+        {"name": "operatorId", "type": "string"}
+    ]
+}

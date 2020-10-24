@@ -1,0 +1,34 @@
+version: "3.3"
+
+services:
+    postgres:
+        image: 192.168.100.212:443/postgres
+        ports: ["5432:5432"]
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: hahaha123
+        volumes:
+            - /mnt/pgdata:/var/lib/postgresql/data
+        healthcheck:
+          test: ["CMD-SHELL", "psql -h localhost -p 5432 -U postgres"]
+          interval: 30s
+          timeout: 30s
+          retries: 5
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints: [node.labels.db == postgres]
+        networks: [db]
+    adminer:
+        image: adminer
+        ports: ["9085:8080"]
+        depends_on: [postgres]
+        deploy:
+            mode: replicated
+            replicas: 1
+        networks: [db]
+        
+networks:
+    db:
+        external: true

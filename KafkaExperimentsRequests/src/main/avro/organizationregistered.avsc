@@ -1,0 +1,12 @@
+{ "type": "record",
+    "namespace": "test.requests.domain.events.avro",
+    "doc": "Регистрация заявителя - юридического лица",
+    "name": "OrganizationRegistered",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "inn", "type": "string"},
+        {"name": "shortName", "type": "string"},
+        {"name": "longName", "type": ["null", "string"]}
+    ]
+}

@@ -1,0 +1,37 @@
+{ "type": "record",
+    "namespace": "test.requests.domain.events.avro",
+    "doc": "Событие выдачи бланка заявителю",
+    "name": "ApplicationDraftHandedOver",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "applicationNumber", "type": "string"},
+        {"name": "version", "type": "int"},
+        {"name": "applicationType", "type": "string"},
+        {"name": "applicantId", "type": "string"},
+        {"name": "operatorId", "type": "string"},
+        {"name": "applicantDocumentTypes", "type": {
+                "type": "array", "items": {
+                    "type": "record",
+                    "name": "ApplicantDocumentType",
+                    "fields": [
+                        {"name": "typeCode", "type": "string"},
+                        {"name": "typeId", "type": "string"}
+                     ]
+                 }
+            }
+         },
+        {"name": "applicantDocumentFields", "type": {
+                "type": "array", "items": {
+                    "type": "record",
+                    "name": "ApplicantDocumentField",
+                    "fields": [
+                        {"name": "documentId", "type": "string"},
+                        {"name": "fieldCode", "type": "string"},
+                        {"name": "fieldValue", "type": "string"}
+                     ]
+                }
+            }
+        }
+    ]
+}

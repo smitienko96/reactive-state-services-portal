@@ -1,0 +1,15 @@
+{ "type": "record",
+    "namespace": "test.documents.domain.events.avro",
+    "doc": "Событие добавление новой опции для поля документа типа ВАРИАНТЫ ВЫБОРА",
+    "name": "DocumentFieldOptionAdded",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "documentTypeId", "type": "string"},
+        {"name": "version", "type": "int"},
+        {"name": "fieldCode", "type": "string"},
+        {"name": "order", "type": "int"},
+        {"name": "value", "type": "string"},
+        {"name": "description", "type": ["string", "null"]}
+    ]
+}

@@ -1,0 +1,8 @@
+# Specify location for json key used to access service registry
+GCE_KEY_LOCATION=
+# Specify ID of Google Cloud Engine Project
+GCE_PROJECT_ID=kite-221910
+# Specify connection properties for private Docker registry
+DOCKER_REGISTRY_URL=192.168.100.212
+DOCKER_USERNAME=username
+DOCKER_PASSWORD=password

@@ -1,0 +1,38 @@
+spring.application.name: kite-experiments-config
+server.port: 8888
+
+management.server.port: 9193
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure.include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+
+management.health.binders.enabled: true
+
+eureka:
+  client:
+    registryFetchIntervalSeconds: 10
+    serviceUrl.defaultZone: ${EUREKA_DEFAULT_ZONE_URL}
+    healthcheck.enabled: true
+  instance:
+    leaseRenewalIntervalInSeconds: 10
+    health-check-url-path: /health
+    preferIpAddress: true
+    instance-id: ${spring.application.name}
+    metadata-map:
+      management:
+        port: ${management.server.port}
+        instance-id: ${spring.application.name}
+        context-path: /
+
+spring:
+  cloud:
+    inetutils:
+      preferred-networks:
+        - 10.0
+    config.server.git.uri: ${CONFIG_REPOSITORY_URL}

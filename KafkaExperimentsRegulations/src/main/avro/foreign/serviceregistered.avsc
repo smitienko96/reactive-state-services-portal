@@ -1,0 +1,13 @@
+{ "type": "record",
+    "namespace": "test.services.domain.events.avro",
+    "doc": "Событие регистрации новой услуги",
+    "name": "ServiceRegistered",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "serviceId", "type": "string"},
+        {"name": "serviceCode", "type": "string"},
+        {"name": "name", "type": "string"},
+        {"name": "description", "type": "string"}
+    ]
+}

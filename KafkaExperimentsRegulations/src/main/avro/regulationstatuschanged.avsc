@@ -1,0 +1,14 @@
+{ "type": "record",
+    "namespace": "test.regulations.domain.events.avro",
+    "doc": "Событие изменения состояния регламента",
+    "name": "RegulationStatusChanged",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "regulationNumber", "type": "string"},
+        {"name": "regulationDate", "type": "long"},
+        {"name": "version", "type": "int"},
+        {"name": "status", "type": "string"},
+        {"name": "changeDate", "type": "long"}
+    ]
+}

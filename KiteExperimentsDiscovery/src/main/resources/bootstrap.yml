@@ -1,0 +1,21 @@
+server.port: ${DISCOVERY_SERVICE_PORT}
+
+spring.application.name: kite-experiments-discovery
+#spring.cloud.config.uri: ${KITE_EXPERIMENTS_CONFIG_SERVER}
+
+#spring.application.name: kite-experiments-discovery
+
+eureka.client.register-with-eureka: false
+eureka.client.fetch-registry: false
+
+eureka.server:
+  peer-node-read-timeout-ms: 10000
+  renewalPercentThreshold: 0.1
+
+spring.boot.admin:
+  client:
+    url: ${ADMIN_URL}
+    period: 10000
+    instance:
+      prefer-ip: true
+      name: ${spring.application.name}

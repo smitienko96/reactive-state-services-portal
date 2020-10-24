@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info" name="spring-boot-kafka-log" monitorInterval="30">
+    <Appenders>
+        <Kafka name="Kafka" topic="${env:KAFKA_LOGGING_TOPIC}">
+            <PatternLayout pattern="%date %message"/>
+            <Property name="bootstrap.servers">${env:KAFKA_BOOTSTRAP_SERVERS}</Property>
+        </Kafka>
+        <Async name="Async">
+            <AppenderRef ref="Kafka"/>
+        </Async>
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5p [%-7t] %F:%L - %m%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="Kafka"/>
+            <AppenderRef ref="stdout"/>
+        </Root>
+        <Logger name="org.apache.kafka" level="INFO">
+            <AppenderRef ref="stdout"/>
+        </Logger>
+        <Logger name="test.common.service" level="DEBUG" >
+            <AppenderRef ref="Kafka"/>
+            <AppenderRef ref="stdout"/>
+        </Logger>
+        <Logger name="reactor.ipc.netty" level="DEBUG">
+            <AppenderRef ref="stdout"/>
+        </Logger>
+        <Logger name="io.netty.handler" level="DEBUG">
+            <AppenderRef ref="stdout"/>
+        </Logger>
+        <Logger name="org.springframework.web.reactive" level="DEBUG">
+            <AppenderRef ref="stdout"/>
+        </Logger>
+        <Logger name="reactor.netty.http.server.AccessLog" level="DEBUG">
+            <AppenderRef ref="stdout"/>
+        </Logger>
+        <Logger name="org.springframework.cloud" level="DEBUG">
+            <AppenderRef ref="stdout"/>
+        </Logger>
+    </Loggers>
+</Configuration>

@@ -1,0 +1,147 @@
+buildscript {
+    ext {
+        springBootVersion = '2.1.0.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "io.spring.gradle:dependency-management-plugin:0.5.2.RELEASE"
+    }
+}
+
+plugins {
+    id 'io.franzbecker.gradle-lombok' version '1.14'
+    id "com.bmuschko.docker-spring-boot-application" version "4.0.5"
+}
+
+configurations {
+    implementation {
+        exclude module: "spring-boot-starter-tomcat"
+        exclude module: 'spring-boot-starter-logging'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'java-library'
+
+apply plugin: 'io.franzbecker.gradle-lombok'
+lombok {
+    version = '1.18.2'
+    sha256 = ""
+}
+
+apply plugin: 'idea'
+
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+apply plugin: "com.bmuschko.docker-spring-boot-application"
+
+def docker_registry_url = DOCKER_REGISTRY_URL
+docker {
+    registryCredentials {
+//        url = 'https://gcr.io'
+        url = "https://${docker_registry_url}"
+//        username = '_json_key'
+//        password = file(GCE_KEY_LOCATION).text
+        username = DOCKER_USERNAME
+        password = DOCKER_PASSWORD
+    }
+}
+
+apply plugin: 'maven-publish'
+
+group = 'ru.lenobl.egov.kite'
+version = '1.0'
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven { url "https://repo.spring.io/milestone" }
+    maven { url "https://repo.spring.io/libs-milestone" }
+    maven { url "http://packages.conhfluent.io/maven" }
+    maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+}
+
+
+ext {
+    springCloudVersion = 'Greenwich.M3'
+    springAdminVersion = '2.1.1'
+}
+
+dependencies {
+    implementation("de.codecentric:spring-boot-admin-starter-client:${springAdminVersion}")
+    implementation('org.springframework.cloud:spring-cloud-starter-gateway')
+    implementation('org.springframework.cloud:spring-cloud-starter-config')
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation('org.springframework.cloud:spring-cloud-starter-netflix-eureka-client')
+    implementation('org.springframework.cloud:spring-cloud-starter-netflix-turbine-stream')
+    implementation('org.springframework.cloud:spring-cloud-starter-sleuth')
+    implementation("org.springframework.boot:spring-boot-starter-log4j2")  
+    implementation("org.apache.kafka:kafka-log4j-appender:1.0.0")
+    implementation("org.apache.commons:commons-lang3:3.7")
+    implementation('javax.validation:validation-api:2.0.1.Final')
+    implementation("org.hibernate:hibernate-validator:6.0.13.Final")
+
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+build.dependsOn publishToMavenLocal
+
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+
+def docker_application_name = "kafka-experiments-gateway"
+def docker_healthcheck_port = "\${GATEWAY_SERVICE_PORT}"
+
+task createDockerfile(type: Dockerfile) {
+    group 'build'
+    destFile = project.file('build/docker/Dockerfile')
+    from 'anapsix/alpine-java'
+    label(['maintainer': 'Dmitry Steklyannikov "quanizator@gmail.com"'])
+    copyFile jar.archiveName, "/app/${docker_application_name}.jar"
+    workingDir "/app"
+    runCommand 'apk --update --no-cache add curl'
+    entryPoint 'java'
+    defaultCommand '-jar', "/app/${docker_application_name}.jar"
+}
+
+task buildImage(type: DockerBuildImage) {
+    group 'build'
+    dependsOn createDockerfile
+    inputDir = createDockerfile.destFile.asFile.orNull.parentFile
+    tags = ["${docker_registry_url}/${docker_application_name}:latest"]
+}
+
+task pushImage(type: DockerPushImage) {
+    group 'build'
+    dependsOn buildImage
+    imageName = buildImage.tags.get()[0]
+}
+
+
+task syncJarAppArchive(type: Sync) {
+    dependsOn assemble
+    from jar.archivePath
+    into createDockerfile.destFile.asFile.orNull.parentFile
+}
+
+createDockerfile.dependsOn syncJarAppArchive

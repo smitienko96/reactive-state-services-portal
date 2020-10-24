@@ -1,0 +1,17 @@
+{ "type": "record",
+    "namespace": "test.regulations.domain.events.avro",
+    "doc": "Событие регистрации нового регламента",
+    "name": "RegulationRegistered",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "regulationNumber", "type": "string"},
+        {"name": "regulationDate", "type": "long"},
+        {"name": "serviceId", "type": "string"},
+        {"name": "questionaryRequired", "type": "boolean"},
+        {"name": "status", "type": "string"},
+        {"name": "allowedApplicantTypes", "type":
+                    {"type": "array", "items": "string"}
+        }
+    ]
+}

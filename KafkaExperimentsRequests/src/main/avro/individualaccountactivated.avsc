@@ -1,0 +1,11 @@
+{ "type": "record",
+    "namespace": "test.requests.domain.events.avro",
+    "doc": "Активация учетной записи физического лица",
+    "name": "IndividualAccountActivated",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "snils", "type": "string"},
+        {"name": "version", "type": "int"}
+    ]
+}

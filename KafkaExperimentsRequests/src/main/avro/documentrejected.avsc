@@ -1,0 +1,24 @@
+{ "type": "record",
+    "namespace": "test.requests.domain.events.avro",
+    "doc": "Неудачная попытка прикрепления к заявлению документа",
+    "name": "DocumentRejected",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "applicationNumber", "type": "string"},
+        {"name": "version", "type": "int"},
+        {"name": "documentId", "type": "string"},
+        {"name": "documentTypeId", "type": "string"},
+        {"name": "documentFields", "type": {
+            "type": "array", "items": {
+                "type": "record",
+                "name": "DocumentField",
+                "fields": [
+                        {"name": "fieldCode", "type": "string"},
+                        {"name": "value", "type": "string"}
+                        ]
+                 }
+            }
+        }
+    ]
+}

@@ -1,0 +1,16 @@
+{ "type": "record",
+    "namespace": "test.regulations.domain.events.avro",
+    "doc": "Событие регистрации условия предоставления",
+    "name": "RegulationConditionAdded",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "regulationNumber", "type": "string"},
+        {"name": "regulationDate", "type": "long"},
+        {"name": "version", "type": "int"},
+        {"name": "conditionCode", "type": "string"},
+        {"name": "conditionName", "type": "string"},
+        {"name": "conditionDescription", "type": "string"},
+        {"name": "conditionOrder", "type": "int"}
+    ]
+}

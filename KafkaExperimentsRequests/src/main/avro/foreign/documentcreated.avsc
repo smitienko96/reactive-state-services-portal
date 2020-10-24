@@ -1,0 +1,15 @@
+{ "type": "record",
+    "namespace": "test.documents.domain.events.avro",
+    "doc": "Событие создания нового документа",
+    "name": "DocumentCreated",
+    "fields": [
+        {"name": "date", "type": "long"},
+        {"name": "uuid", "type": "string"},
+        {"name": "documentId", "type": "string"},
+        {"name": "documentTypeId", "type": "string"},
+        {"name": "usageType", "type": "string", "default": "EXTERNAL"},
+        {"name": "name", "type": "string"},
+        {"name": "description", "type": "string"},
+        {"name": "referenceNumber", "type": ["null", "string"],"default": "null" }
+    ]
+}

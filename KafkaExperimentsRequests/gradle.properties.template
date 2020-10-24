@@ -1,0 +1,15 @@
+# Specify location for json key used to access service registry
+GCE_KEY_LOCATION=/Users/macbook/Downloads/kite-221910-497e2d31ff9d.json
+# Specify ID of Google Cloud Engine Project
+GCE_PROJECT_ID=kite-221910
+
+# Specify connection properties for private Docker registry
+DOCKER_REGISTRY_URL=192.168.100.212
+DOCKER_USERNAME=username
+DOCKER_PASSWORD=password
+
+# Specify connection properties for Postgres
+DB_POSTGRES_HOST=35.241.112.232:5432
+DB_POSTGRES_USERNAME=postgres
+DB_POSTGRES_PASSWORD=hahaha123
+DB_POSTGRES_DATABASE=requests
